@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: terabox-dl-api
+    env: docker
+    dockerfilePath: ./dockerfile
+    plan: free
+    envVars:
+      - key: COOKIE_JSON
+        sync: false

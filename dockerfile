@@ -1,7 +1,12 @@
-FROM oven/bun
+FROM oven/bun:1
 
-WORKDIR /terabox-dl
+WORKDIR /app
+
+COPY package.json bun.lock* ./
+RUN bun install
+
 COPY . .
-RUN bun i
 
-CMD ["bun", "start"]
+EXPOSE 5000
+
+CMD ["bun", "src/index.ts"]
