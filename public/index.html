@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TeraBox Downloader</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .card {
+    width: 100%;
+    max-width: 640px;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+    background: linear-gradient(90deg, #38bdf8, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .sub { color: #94a3b8; font-size: 0.875rem; margin-bottom: 1.5rem; }
+  .row { display: flex; gap: 0.5rem; }
+  input[type="url"] {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type="url"]:focus { border-color: #38bdf8; }
+  button {
+    padding: 0.75rem 1.25rem;
+    background: linear-gradient(90deg, #38bdf8, #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.05s;
+    white-space: nowrap;
+  }
+  button:hover:not(:disabled) { opacity: 0.9; }
+  button:active:not(:disabled) { transform: scale(0.98); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    display: none;
+  }
+  .status.show { display: block; }
+  .status.loading { background: rgba(56, 189, 248, 0.1); color: #7dd3fc; }
+  .status.error { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
+  .status.success { background: rgba(34, 197, 94, 0.1); color: #86efac; }
+  .result {
+    margin-top: 1.5rem;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: none;
+  }
+  .result.show { display: block; }
+  .result h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: #f1f5f9;
+    word-break: break-all;
+  }
+  .meta {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+  }
+  .meta dt { color: #94a3b8; }
+  .meta dd { color: #e2e8f0; word-break: break-all; }
+  .thumb {
+    width: 100%;
+    max-height: 240px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    background: #1e293b;
+  }
+  .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .actions a {
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+    padding: 0.65rem 1rem;
+    background: linear-gradient(90deg, #38bdf8, #6366f1);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: opacity 0.15s;
+  }
+  .actions a:hover { opacity: 0.9; }
+  .actions a.secondary {
+    background: rgba(148, 163, 184, 0.15);
+    color: #cbd5e1;
+  }
+  .actions a.play {
+    background: linear-gradient(90deg, #10b981, #059669);
+  }
+  .player-wrap {
+    margin-top: 1rem;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    display: none;
+  }
+  .player-wrap.show { display: block; }
+  .player-wrap video {
+    width: 100%;
+    max-height: 480px;
+    display: block;
+    background: #000;
+  }
+  .player-close {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border: none;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .player-close:hover { background: rgba(239, 68, 68, 0.25); }
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.75rem;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>☁️ TeraBox Downloader</h1>
+    <p class="sub">Paste a TeraBox share URL to get the direct download link.</p>
+
+    <div class="row">
+      <input type="url" id="urlInput" placeholder="https://terabox.app/s/..." autofocus />
+      <button id="fetchBtn">Fetch</button>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <div id="result" class="result"></div>
+    <div id="player" class="player-wrap">
+      <video id="videoEl" controls preload="metadata"></video>
+      <button id="playerClose" class="player-close">✕ Close player</button>
+    </div>
+
+    <footer>TeraBox API · runs locally on port 5000</footer>
+  </div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const input = $("urlInput");
+const btn = $("fetchBtn");
+const statusEl = $("status");
+const resultEl = $("result");
+const playerWrap = $("player");
+const videoEl = $("videoEl");
+const playerClose = $("playerClose");
+
+function hidePlayer() {
+  playerWrap.classList.remove("show");
+  videoEl.pause();
+  videoEl.removeAttribute("src");
+  videoEl.load();
+}
+
+playerClose.addEventListener("click", hidePlayer);
+
+function setStatus(text, kind) {
+  statusEl.className = `status show ${kind}`;
+  statusEl.textContent = text;
+}
+
+function clearStatus() {
+  statusEl.className = "status";
+  statusEl.textContent = "";
+}
+
+function clearResult() {
+  resultEl.className = "result";
+  resultEl.innerHTML = "";
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+  }[c]));
+}
+
+function renderResult(data) {
+  const filename = data.filename ?? data.file_name ?? data.server_filename ?? "Unknown";
+  const size = data.size ?? (data.size_bytes ? `${data.size_bytes} B` : "Unknown");
+  const thumbsRaw = data.thumbs ?? data.thumbnail ?? "";
+  const download = data.download ?? data.dlink ?? data.direct_link ?? "";
+
+  const thumbUrl = typeof thumbsRaw === "string"
+    ? thumbsRaw
+    : (thumbsRaw && typeof thumbsRaw === "object" ? (thumbsRaw.url1 || thumbsRaw.url2 || thumbsRaw.url3 || "") : "");
+
+  const ext = (filename.split(".").pop() ?? "").toLowerCase();
+  const isPlayable = ["mp4", "webm", "ogg", "mkv", "mov", "m4v", "avi"].includes(ext);
+
+  let html = `<h3>${escapeHtml(filename)}</h3>`;
+  if (thumbUrl) {
+    html += `<img class="thumb" src="${escapeHtml(thumbUrl)}" alt="thumbnail" onerror="this.style.display='none'" />`;
+  }
+  html += `<dl class="meta">
+    <dt>Size</dt><dd>${escapeHtml(size)}</dd>
+    ${download ? `<dt>Link</dt><dd>${escapeHtml(download)}</dd>` : ""}
+  </dl>`;
+  if (download) {
+    const actions = [];
+    actions.push(`<a href="${escapeHtml(download)}" target="_blank" rel="noopener noreferrer">⬇ Download</a>`);
+    if (isPlayable) {
+      actions.push(`<a class="play" href="#" id="playBtn">▶ Play in browser</a>`);
+    }
+    actions.push(`<a class="secondary" href="${escapeHtml(download)}" target="_blank" rel="noopener noreferrer">Open link</a>`);
+    html += `<div class="actions">${actions.join("")}</div>`;
+  }
+  resultEl.innerHTML = html;
+  resultEl.className = "result show";
+
+  const playBtn = document.getElementById("playBtn");
+  if (playBtn && download) {
+    playBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      hidePlayer();
+      const streamUrl = `/stream?url=${encodeURIComponent(download)}`;
+      videoEl.onerror = () => {
+        setStatus("Unable to stream video in browser. This video format (.mkv/unsupported codec) or expired cookie may require playing in VLC or downloading directly.", "error");
+      };
+      videoEl.src = streamUrl;
+      playerWrap.classList.add("show");
+      videoEl.play().catch(() => {
+        // some browsers block autoplay — user clicks ▶ in controls
+      });
+      playerWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }
+}
+
+async function fetchFile() {
+  const url = input.value.trim();
+  if (!url) {
+    setStatus("Please enter a TeraBox URL.", "error");
+    input.focus();
+    return;
+  }
+
+  btn.disabled = true;
+  clearResult();
+  hidePlayer();
+  setStatus('<span class="spinner"></span>Fetching file details...', "loading");
+
+  try {
+    const res = await fetch(`/api?url=${encodeURIComponent(url)}`);
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      setStatus(`Error: ${data.error || res.statusText}`, "error");
+      return;
+    }
+
+    // Server response wraps fields; handle both wrapped and flat shapes
+    const payload = data.response ?? data;
+    if (payload && payload.status === "success") {
+      renderResult(payload);
+      clearStatus();
+    } else if (payload && (payload.filename || payload.download || payload.dlink)) {
+      renderResult(payload);
+      clearStatus();
+    } else {
+      setStatus("Unexpected response: " + JSON.stringify(data).slice(0, 200), "error");
+    }
+  } catch (err) {
+    setStatus(`Network error: ${err.message}`, "error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+btn.addEventListener("click", fetchFile);
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") fetchFile();
+});
+</script>
+</body>
+</html>
