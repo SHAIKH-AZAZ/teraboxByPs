@@ -3,333 +3,689 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TeraBox Downloader</title>
+<title>TeraBox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet" />
 <style>
+  :root {
+    --night: #0D0B14;
+    --slab: #17131F;
+    --edge: #2C2539;
+    --paper: #EDE7DE;
+    --dim: #8C8399;
+    --beam: #E8B04B;
+    --bad: #E4757F;
+    --gut: clamp(1.25rem, 5vw, 4rem);
+    --fs-prompt: clamp(1.6rem, 6vw, 3.4rem);
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    color: #e2e8f0;
-    min-height: 100vh;
+    min-height: 100svh;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-  }
-  .card {
-    width: 100%;
-    max-width: 640px;
-    background: rgba(15, 23, 42, 0.7);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(148, 163, 184, 0.15);
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-  }
-  h1 {
-    font-size: 1.5rem;
-    margin-bottom: 0.25rem;
-    background: linear-gradient(90deg, #38bdf8, #a78bfa);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .sub { color: #94a3b8; font-size: 0.875rem; margin-bottom: 1.5rem; }
-  .row { display: flex; gap: 0.5rem; }
-  input[type="url"] {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    background: rgba(30, 41, 59, 0.8);
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 8px;
-    color: #e2e8f0;
-    font-size: 0.9rem;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  input[type="url"]:focus { border-color: #38bdf8; }
-  button {
-    padding: 0.75rem 1.25rem;
-    background: linear-gradient(90deg, #38bdf8, #6366f1);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.05s;
-    white-space: nowrap;
-  }
-  button:hover:not(:disabled) { opacity: 0.9; }
-  button:active:not(:disabled) { transform: scale(0.98); }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-  .status {
-    margin-top: 1rem;
-    padding: 0.75rem;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    display: none;
-  }
-  .status.show { display: block; }
-  .status.loading { background: rgba(56, 189, 248, 0.1); color: #7dd3fc; }
-  .status.error { background: rgba(239, 68, 68, 0.1); color: #fca5a5; }
-  .status.success { background: rgba(34, 197, 94, 0.1); color: #86efac; }
-  .result {
-    margin-top: 1.5rem;
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid rgba(148, 163, 184, 0.15);
-    border-radius: 12px;
-    padding: 1.25rem;
-    display: none;
-  }
-  .result.show { display: block; }
-  .result h3 {
+    flex-direction: column;
+    background: var(--night);
+    color: var(--paper);
+    font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
     font-size: 1rem;
-    margin-bottom: 1rem;
-    color: #f1f5f9;
-    word-break: break-all;
+    font-variation-settings: 'wdth' 96, 'wght' 400;
+    line-height: 1.5;
   }
-  .meta {
-    display: grid;
-    grid-template-columns: 80px 1fr;
-    gap: 0.5rem 1rem;
-    margin-bottom: 1rem;
-    font-size: 0.875rem;
+
+  :focus-visible { outline: 2px solid var(--beam); outline-offset: 3px; }
+
+  .sr-only {
+    position: absolute; width: 1px; height: 1px;
+    clip-path: inset(50%); overflow: hidden; white-space: nowrap;
   }
-  .meta dt { color: #94a3b8; }
-  .meta dd { color: #e2e8f0; word-break: break-all; }
-  .thumb {
-    width: 100%;
-    max-height: 240px;
-    object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    background: #1e293b;
+
+  /* ---- frame ---- */
+  .bar {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 1rem; padding: 1.25rem var(--gut);
   }
-  .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  .actions a {
+  .mark {
+    font-size: .9375rem;
+    font-variation-settings: 'wdth' 120, 'wght' 700;
+    letter-spacing: .01em;
+  }
+  .bar .port { color: var(--dim); font-size: .8125rem; }
+
+  main {
     flex: 1;
-    min-width: 140px;
-    text-align: center;
-    padding: 0.65rem 1rem;
-    background: linear-gradient(90deg, #38bdf8, #6366f1);
-    color: #fff;
-    text-decoration: none;
-    border-radius: 8px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    transition: opacity 0.15s;
+    padding: clamp(1.5rem, 12vh, 7rem) var(--gut) 3rem;
+    transition: padding-top .4s cubic-bezier(.2,.8,.2,1);
   }
-  .actions a:hover { opacity: 0.9; }
-  .actions a.secondary {
-    background: rgba(148, 163, 184, 0.15);
-    color: #cbd5e1;
+  body.loaded main { padding-top: 1rem; }
+
+  .foot {
+    padding: 1.5rem var(--gut) 2rem;
+    color: var(--dim); font-size: .8125rem;
   }
-  .actions a.play {
-    background: linear-gradient(90deg, #10b981, #059669);
+
+  /* ---- intake ---- */
+  .intake { max-width: 1240px; margin: 0 auto; }
+
+  .lede {
+    max-width: 44ch;
+    margin-bottom: 1.75rem;
+    color: var(--dim);
+    font-size: 1.0625rem;
   }
-  .player-wrap {
-    margin-top: 1rem;
-    background: #000;
-    border-radius: 8px;
-    overflow: hidden;
-    display: none;
+  body.loaded .lede { display: none; }
+
+  .composer {
+    display: flex; align-items: flex-end; gap: 1rem;
+    border-bottom: 1px solid var(--edge);
+    padding-bottom: .4rem;
+    transition: border-color .2s, box-shadow .2s;
   }
-  .player-wrap.show { display: block; }
-  .player-wrap video {
-    width: 100%;
-    max-height: 480px;
-    display: block;
-    background: #000;
+  .composer:focus-within {
+    border-color: var(--beam);
+    box-shadow: 0 1px 0 var(--beam);
   }
-  .player-close {
-    display: block;
-    width: 100%;
-    padding: 0.5rem;
-    background: rgba(239, 68, 68, 0.15);
-    color: #fca5a5;
-    border: none;
-    font-size: 0.8rem;
+
+  .prompt {
+    flex: 1; min-width: 0;
+    background: none; border: 0; outline: none;
+    color: var(--paper);
+    font-family: inherit;
+    font-size: var(--fs-prompt);
+    font-variation-settings: 'wdth' 112, 'wght' 600;
+    letter-spacing: -.02em;
+    line-height: 1.15;
+    transition: font-size .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .prompt::placeholder { color: #453D57; }
+  body.loaded { --fs-prompt: 1.0625rem; }
+
+  .go {
+    flex: none;
+    margin-bottom: .3rem;
+    padding: .55rem 1rem;
+    background: var(--beam); color: #1A1206;
+    border: 0; border-radius: 2px;
+    font-family: inherit; font-size: .875rem;
+    font-variation-settings: 'wdth' 100, 'wght' 650;
+    cursor: pointer;
+    transition: background-color .15s;
+  }
+  .go:hover:not(:disabled) { background: #F3C168; }
+  .go:disabled { background: var(--edge); color: var(--dim); cursor: progress; }
+
+  .note {
+    min-height: 1.5rem;
+    margin-top: .75rem;
+    font-size: .875rem;
+    color: var(--dim);
+  }
+  .note.bad { color: var(--bad); }
+
+  /* ---- result ---- */
+  [hidden] { display: none !important; }
+
+  .shell {
+    max-width: 1240px; margin: 2.5rem auto 0;
+    display: grid; gap: clamp(1.5rem, 3vw, 2.5rem);
+    grid-template-columns: minmax(0, 1fr) 300px;
+    align-items: start;
+    animation: rise .45s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+
+  .rail h2 {
+    font-size: 1.3125rem;
+    font-variation-settings: 'wdth' 92, 'wght' 620;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    margin-bottom: 1.25rem;
+  }
+  .facts {
+    display: grid; grid-template-columns: auto 1fr;
+    gap: .5rem 1.5rem;
+    font-size: .875rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--edge);
+  }
+  .facts dt { color: var(--dim); }
+  .facts dd { overflow-wrap: anywhere; }
+
+  .acts { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.25rem 0 1rem; }
+  .acts > * {
+    flex: 1 1 auto;
+    padding: .65rem 1rem;
+    border-radius: 2px;
+    font-family: inherit; font-size: .875rem;
+    font-variation-settings: 'wdth' 100, 'wght' 620;
+    text-align: center; text-decoration: none;
     cursor: pointer;
   }
-  .player-close:hover { background: rgba(239, 68, 68, 0.25); }
-  .spinner {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    border: 2px solid currentColor;
-    border-right-color: transparent;
+  .primary { background: var(--beam); color: #1A1206; border: 0; }
+  .primary:hover { background: #F3C168; }
+  .ghost { background: none; color: var(--paper); border: 1px solid var(--edge); }
+  .ghost:hover { border-color: var(--dim); }
+
+  .src { color: var(--dim); font-size: .8125rem; text-decoration: none; border-bottom: 1px solid var(--edge); }
+  .src:hover { color: var(--paper); }
+
+  /* ---- stage / player ---- */
+  .stage {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border-radius: 3px;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .stage video { width: 100%; height: 100%; display: block; object-fit: contain; background: #000; }
+  .stage.idle { cursor: none; }
+
+  .blank {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: .5rem; padding: 2rem; text-align: center;
+    background: var(--slab);
+    color: var(--dim); font-size: .9375rem;
+  }
+  .stage.no-preview { aspect-ratio: auto; min-height: 200px; }
+  .stage.no-preview .blank { display: flex; position: static; height: 100%; min-height: 200px; }
+  .stage.no-preview video, .stage.no-preview .chrome, .stage.no-preview .bigplay { display: none; }
+
+  .bigplay {
+    position: absolute; inset: 0; z-index: 2;
+    display: grid; place-items: center;
+    width: 100%; height: 100%;
+    background: none; border: 0; cursor: pointer;
+    color: var(--paper);
+  }
+  .bigplay span {
+    display: grid; place-items: center;
+    width: 76px; height: 76px;
     border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-right: 0.5rem;
-    vertical-align: middle;
+    background: rgba(13, 11, 20, .55);
+    backdrop-filter: blur(2px);
+    transition: transform .2s, background-color .2s, opacity .2s;
+  }
+  .bigplay:hover span { background: rgba(13, 11, 20, .78); transform: scale(1.06); }
+  .bigplay svg { width: 30px; height: 30px; margin-left: 3px; }
+  .stage.playing .bigplay { pointer-events: none; }
+  .stage.playing .bigplay span { opacity: 0; transform: scale(1.4); }
+
+  .spin {
+    position: absolute; inset: 0; z-index: 3;
+    display: none; place-items: center;
+  }
+  .stage.waiting .spin { display: grid; }
+  .stage.waiting .bigplay span { opacity: 0; }
+  .spin i {
+    width: 34px; height: 34px;
+    border: 2px solid rgba(237, 231, 222, .25);
+    border-top-color: var(--beam);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  footer {
-    margin-top: 1.5rem;
-    text-align: center;
-    color: #64748b;
-    font-size: 0.75rem;
+
+  .fault {
+    position: absolute; inset: 0; z-index: 4;
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: .875rem; padding: 2rem; text-align: center;
+    background: rgba(13, 11, 20, .92);
+    font-size: .9375rem;
+  }
+  .stage.errored .fault { display: flex; }
+  .stage.errored .chrome, .stage.errored .bigplay { display: none; }
+  .fault p { max-width: 42ch; color: var(--paper); }
+  .fault a { color: var(--beam); }
+
+  .chrome {
+    position: absolute; inset: auto 0 0 0; z-index: 5;
+    padding: 2.5rem .75rem .625rem;
+    background: linear-gradient(to top, rgba(0,0,0,.9), rgba(0,0,0,.45) 55%, transparent);
+    opacity: 1;
+    transition: opacity .2s;
+  }
+  .stage.idle .chrome { opacity: 0; pointer-events: none; }
+  .stage:focus-within .chrome { opacity: 1; pointer-events: auto; }
+
+  .track { position: relative; height: 18px; display: flex; align-items: center; }
+  .track::before,
+  .track .buf,
+  .track .played {
+    position: absolute; left: 0; height: 3px; border-radius: 2px;
+    transition: height .15s;
+  }
+  .track::before { content: ''; right: 0; background: rgba(237, 231, 222, .2); }
+  .track .buf { width: calc(var(--b, 0) * 100%); background: rgba(237, 231, 222, .38); }
+  .track .played { width: calc(var(--p, 0) * 100%); background: var(--beam); }
+  .track:hover::before, .track:hover .buf, .track:hover .played,
+  .track:focus-within::before, .track:focus-within .buf, .track:focus-within .played { height: 5px; }
+
+  .seek {
+    position: relative; z-index: 1;
+    width: 100%; height: 18px; margin: 0;
+    -webkit-appearance: none; appearance: none;
+    background: none; cursor: pointer;
+  }
+  .seek::-webkit-slider-runnable-track { height: 18px; background: none; }
+  .seek::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 13px; height: 13px; border: 0; border-radius: 50%;
+    background: var(--beam);
+    transform: scale(0);
+    transition: transform .15s;
+  }
+  .track:hover .seek::-webkit-slider-thumb,
+  .seek:focus-visible::-webkit-slider-thumb { transform: scale(1); }
+  .seek::-moz-range-track { height: 18px; background: none; }
+  .seek::-moz-range-thumb {
+    width: 13px; height: 13px; border: 0; border-radius: 50%;
+    background: var(--beam);
+  }
+
+  .controls {
+    display: flex; align-items: center; gap: .25rem;
+    margin-top: .125rem;
+    color: var(--paper);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+  }
+  .ctl {
+    display: grid; place-items: center;
+    width: 36px; height: 36px;
+    background: none; border: 0; border-radius: 2px;
+    color: inherit; cursor: pointer;
+    font-family: inherit; font-size: .8125rem;
+    font-variation-settings: 'wdth' 100, 'wght' 620;
+    opacity: .82;
+    transition: opacity .15s;
+  }
+  .ctl:hover { opacity: 1; }
+  .ctl svg { width: 20px; height: 20px; fill: currentColor; }
+  .ctl.rate { width: auto; padding: 0 .4rem; }
+
+  .time {
+    margin: 0 .5rem 0 .375rem;
+    white-space: nowrap;
+    font-size: .8125rem;
+    font-variant-numeric: tabular-nums;
+    color: rgba(237, 231, 222, .78);
+  }
+  .grow { flex: 1; }
+
+  .vol { display: flex; align-items: center; }
+  .vol input {
+    width: 0; opacity: 0;
+    height: 3px; margin: 0 .25rem 0 0;
+    -webkit-appearance: none; appearance: none;
+    border-radius: 2px;
+    background: linear-gradient(to right, var(--paper) 0 calc(var(--v, 1) * 100%), rgba(237,231,222,.25) 0);
+    cursor: pointer;
+    transition: width .2s, opacity .2s;
+  }
+  .vol:hover input, .vol:focus-within input { width: 64px; opacity: 1; }
+  .vol input::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 11px; height: 11px; border: 0; border-radius: 50%; background: var(--paper);
+  }
+  .vol input::-moz-range-thumb { width: 11px; height: 11px; border: 0; border-radius: 50%; background: var(--paper); }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: minmax(0, 1fr); margin-top: 1.5rem; }
+    .vol input { width: 56px; opacity: 1; }
+  }
+
+  @media (max-width: 520px) {
+    .ctl.rate, #pip { display: none; }
+    .chrome { padding: 2rem .375rem .5rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
   }
 </style>
 </head>
 <body>
-  <div class="card">
-    <h1>☁️ TeraBox Downloader</h1>
-    <p class="sub">Paste a TeraBox share URL to get the direct download link.</p>
+  <header class="bar">
+    <span class="mark">TeraBox</span>
+    <span class="port">port 5000</span>
+  </header>
 
-    <div class="row">
-      <input type="url" id="urlInput" placeholder="https://terabox.app/s/..." autofocus />
-      <button id="fetchBtn">Fetch</button>
-    </div>
+  <main>
+    <section class="intake">
+      <p class="lede">Paste a share link. Watch it here, or save the file.</p>
 
-    <div id="status" class="status"></div>
+      <form class="composer" id="form" novalidate>
+        <label class="sr-only" for="link">TeraBox share link</label>
+        <input class="prompt" id="link" type="url" inputmode="url" spellcheck="false"
+               autocomplete="off" placeholder="terabox.com/s/…" autofocus />
+        <button class="go" id="go" type="submit">Get file</button>
+      </form>
 
-    <div id="result" class="result"></div>
-    <div id="player" class="player-wrap">
-      <video id="videoEl" controls preload="metadata"></video>
-      <button id="playerClose" class="player-close">✕ Close player</button>
-    </div>
+      <p class="note" id="note" role="status" aria-live="polite"></p>
+    </section>
 
-    <footer>TeraBox API · runs locally on port 5000</footer>
-  </div>
+    <section class="shell" id="shell" hidden>
+      <div class="stage" id="stage">
+        <video id="video" playsinline preload="metadata"></video>
+
+        <div class="blank"><p id="blankMsg">No preview for this file type.</p></div>
+
+        <button class="bigplay" id="bigplay" aria-label="Play">
+          <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>
+        </button>
+
+        <div class="spin" aria-hidden="true"><i></i></div>
+
+        <div class="fault">
+          <p id="faultMsg"></p>
+          <a href="#" id="faultSave" download>Save the file instead</a>
+        </div>
+
+        <div class="chrome">
+          <div class="track">
+            <div class="buf" id="buf"></div>
+            <div class="played" id="played"></div>
+            <input class="seek" id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek" />
+          </div>
+          <div class="controls">
+            <button class="ctl" id="playToggle" aria-label="Play"></button>
+            <button class="ctl" id="back" aria-label="Back 10 seconds">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18V6l-8.5 6zM20 18V6l-8.5 6z"/></svg>
+            </button>
+            <button class="ctl" id="fwd" aria-label="Forward 10 seconds">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 6v12l8.5-6zM4 6v12l8.5-6z"/></svg>
+            </button>
+            <span class="time"><span id="cur">0:00</span> / <span id="dur">0:00</span></span>
+            <span class="grow"></span>
+            <span class="vol">
+              <button class="ctl" id="muteToggle" aria-label="Mute"></button>
+              <input id="volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume" />
+            </span>
+            <button class="ctl rate" id="rate" aria-label="Playback speed">1×</button>
+            <button class="ctl" id="pip" aria-label="Picture in picture" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 11h-8v6h8v-6zm3-8H2a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h20a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-1 16H3V5h18v14z"/></svg>
+            </button>
+            <button class="ctl" id="full" aria-label="Full screen">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="rail">
+        <h2 id="fname"></h2>
+        <dl class="facts">
+          <dt>Size</dt><dd id="fsize"></dd>
+          <dt>Kind</dt><dd id="fkind"></dd>
+          <dt>Resolved in</dt><dd id="ftime"></dd>
+        </dl>
+        <div class="acts">
+          <button class="primary" id="watch" type="button">Play</button>
+          <a class="ghost" id="save" download>Save file</a>
+        </div>
+        <a class="src" id="direct" target="_blank" rel="noopener noreferrer">Open direct link</a>
+      </aside>
+    </section>
+  </main>
+
+  <footer class="foot">Running locally on port 5000.</footer>
 
 <script>
-const $ = (id) => document.getElementById(id);
-const input = $("urlInput");
-const btn = $("fetchBtn");
-const statusEl = $("status");
-const resultEl = $("result");
-const playerWrap = $("player");
-const videoEl = $("videoEl");
-const playerClose = $("playerClose");
+const $ = (s) => document.querySelector(s);
 
-function hidePlayer() {
-  playerWrap.classList.remove("show");
-  videoEl.pause();
-  videoEl.removeAttribute("src");
-  videoEl.load();
+const form = $("#form"), link = $("#link"), go = $("#go"), note = $("#note");
+const shell = $("#shell"), stage = $("#stage"), video = $("#video");
+const seek = $("#seek"), buf = $("#buf"), played = $("#played");
+const cur = $("#cur"), dur = $("#dur");
+const playToggle = $("#playToggle"), bigplay = $("#bigplay"), watch = $("#watch");
+const muteToggle = $("#muteToggle"), volume = $("#volume"), rate = $("#rate");
+const pip = $("#pip"), full = $("#full");
+const save = $("#save"), direct = $("#direct"), faultSave = $("#faultSave");
+const fname = $("#fname"), fsize = $("#fsize"), fkind = $("#fkind"), ftime = $("#ftime");
+const faultMsg = $("#faultMsg"), blankMsg = $("#blankMsg");
+
+const ICON = {
+  play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
+  sound: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>',
+  muted: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9H4zm15.7-1.3-1.4-1.4L16 8.6l-2.3-2.3v2.8l.9.9 4.6 4.6 1.4-1.4-2.2-2.2 1.3-1.3z"/></svg>',
+};
+
+const VIDEO_EXT = ["mp4", "webm", "ogg", "ogv", "mov", "m4v", "mkv", "avi", "ts", "flv", "wmv"];
+const BROWSER_EXT = ["mp4", "webm", "ogg", "ogv", "m4v", "mov"];
+
+const fmt = (s) => {
+  if (!isFinite(s) || s < 0) return "0:00";
+  s = Math.floor(s);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+  return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(x).padStart(2, "0");
+};
+
+function say(text, bad) {
+  note.textContent = text;
+  note.classList.toggle("bad", !!bad);
 }
 
-playerClose.addEventListener("click", hidePlayer);
+/* ---------- fetch ---------- */
 
-function setStatus(text, kind) {
-  statusEl.className = `status show ${kind}`;
-  statusEl.textContent = text;
-}
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const url = link.value.trim();
+  if (!url) { say("Enter a TeraBox share link to continue.", true); link.focus(); return; }
 
-function clearStatus() {
-  statusEl.className = "status";
-  statusEl.textContent = "";
-}
-
-function clearResult() {
-  resultEl.className = "result";
-  resultEl.innerHTML = "";
-}
-
-function escapeHtml(s) {
-  return String(s ?? "").replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  }[c]));
-}
-
-function renderResult(data) {
-  const filename = data.filename ?? data.file_name ?? data.server_filename ?? "Unknown";
-  const size = data.size ?? (data.size_bytes ? `${data.size_bytes} B` : "Unknown");
-  const thumbsRaw = data.thumbs ?? data.thumbnail ?? "";
-  const download = data.download ?? data.dlink ?? data.direct_link ?? "";
-
-  const thumbUrl = typeof thumbsRaw === "string"
-    ? thumbsRaw
-    : (thumbsRaw && typeof thumbsRaw === "object" ? (thumbsRaw.url1 || thumbsRaw.url2 || thumbsRaw.url3 || "") : "");
-
-  const ext = (filename.split(".").pop() ?? "").toLowerCase();
-  const isPlayable = ["mp4", "webm", "ogg", "mkv", "mov", "m4v", "avi"].includes(ext);
-
-  let html = `<h3>${escapeHtml(filename)}</h3>`;
-  if (thumbUrl) {
-    html += `<img class="thumb" src="${escapeHtml(thumbUrl)}" alt="thumbnail" onerror="this.style.display='none'" />`;
-  }
-  html += `<dl class="meta">
-    <dt>Size</dt><dd>${escapeHtml(size)}</dd>
-    ${download ? `<dt>Link</dt><dd>${escapeHtml(download)}</dd>` : ""}
-  </dl>`;
-  if (download) {
-    const actions = [];
-    actions.push(`<a href="${escapeHtml(download)}" target="_blank" rel="noopener noreferrer">⬇ Download</a>`);
-    if (isPlayable) {
-      actions.push(`<a class="play" href="#" id="playBtn">▶ Play in browser</a>`);
-    }
-    actions.push(`<a class="secondary" href="${escapeHtml(download)}" target="_blank" rel="noopener noreferrer">Open link</a>`);
-    html += `<div class="actions">${actions.join("")}</div>`;
-  }
-  resultEl.innerHTML = html;
-  resultEl.className = "result show";
-
-  const playBtn = document.getElementById("playBtn");
-  if (playBtn && download) {
-    playBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      hidePlayer();
-      const streamUrl = `/stream?url=${encodeURIComponent(download)}`;
-      videoEl.onerror = () => {
-        setStatus("Unable to stream video in browser. This video format (.mkv/unsupported codec) or expired cookie may require playing in VLC or downloading directly.", "error");
-      };
-      videoEl.src = streamUrl;
-      playerWrap.classList.add("show");
-      videoEl.play().catch(() => {
-        // some browsers block autoplay — user clicks ▶ in controls
-      });
-      playerWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-  }
-}
-
-async function fetchFile() {
-  const url = input.value.trim();
-  if (!url) {
-    setStatus("Please enter a TeraBox URL.", "error");
-    input.focus();
-    return;
-  }
-
-  btn.disabled = true;
-  clearResult();
-  hidePlayer();
-  setStatus('<span class="spinner"></span>Fetching file details...', "loading");
+  go.disabled = true;
+  say("Resolving…");
 
   try {
-    const res = await fetch(`/api?url=${encodeURIComponent(url)}`);
-    const data = await res.json();
+    const res = await fetch("/api?url=" + encodeURIComponent(url));
+    const body = await res.json();
+    const data = body.response ?? body;
+    const fault = data.error || data.message;
 
-    if (!res.ok || data.error) {
-      setStatus(`Error: ${data.error || res.statusText}`, "error");
-      return;
-    }
+    if (!res.ok || fault) { say(fault || res.statusText, true); return; }
+    if (!data.download) { say("That link resolved, but carried no file.", true); return; }
 
-    // Server response wraps fields; handle both wrapped and flat shapes
-    const payload = data.response ?? data;
-    if (payload && payload.status === "success") {
-      renderResult(payload);
-      clearStatus();
-    } else if (payload && (payload.filename || payload.download || payload.dlink)) {
-      renderResult(payload);
-      clearStatus();
-    } else {
-      setStatus("Unexpected response: " + JSON.stringify(data).slice(0, 200), "error");
-    }
+    present(data);
+    say("");
   } catch (err) {
-    setStatus(`Network error: ${err.message}`, "error");
+    say("Could not reach the server: " + err.message, true);
   } finally {
-    btn.disabled = false;
+    go.disabled = false;
   }
+});
+
+function present(data) {
+  const filename = data.filename || "Untitled file";
+  const ext = (filename.split(".").pop() || "").toLowerCase();
+  const thumbs = data.thumbs && typeof data.thumbs === "object" ? data.thumbs : {};
+  const streamUrl = "/stream?url=" + encodeURIComponent(data.download);
+
+  fname.textContent = filename;
+  fsize.textContent = data.size || "Unknown";
+  fkind.textContent = VIDEO_EXT.includes(ext) ? ext.toUpperCase() + " video"
+    : ext ? ext.toUpperCase() + " file" : "File";
+  ftime.textContent = data.response_time || "—";
+
+  save.href = streamUrl;
+  save.download = filename;
+  faultSave.href = streamUrl;
+  faultSave.download = filename;
+  direct.href = data.download;
+
+  resetPlayer();
+  const playable = BROWSER_EXT.includes(ext);
+  stage.classList.toggle("no-preview", !playable);
+  watch.hidden = !playable;
+
+  if (playable) {
+    video.poster = thumbs.url3 || thumbs.url2 || thumbs.url1 || "";
+    video.src = streamUrl;
+  } else {
+    blankMsg.textContent = VIDEO_EXT.includes(ext)
+      ? "Browsers can't play " + ext.toUpperCase() + ". Save the file and open it in VLC."
+      : "No preview for " + (ext ? "." + ext : "this") + " files. Save it to open.";
+  }
+
+  shell.hidden = false;
+  document.body.classList.add("loaded");
 }
 
-btn.addEventListener("click", fetchFile);
-input.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") fetchFile();
+function resetPlayer() {
+  video.pause();
+  video.removeAttribute("src");
+  video.removeAttribute("poster");
+  video.load();
+  stage.classList.remove("playing", "waiting", "errored", "idle");
+  seek.value = 0;
+  stage.style.setProperty("--p", 0);
+  stage.style.setProperty("--b", 0);
+  cur.textContent = dur.textContent = "0:00";
+}
+
+/* ---------- player ---------- */
+
+playToggle.innerHTML = ICON.play;
+muteToggle.innerHTML = ICON.sound;
+if ("requestPictureInPicture" in HTMLVideoElement.prototype) pip.hidden = false;
+
+const toggle = () => { video.paused ? video.play().catch(() => {}) : video.pause(); };
+const nudge = (s) => { video.currentTime = Math.min(video.duration || 0, Math.max(0, video.currentTime + s)); };
+
+playToggle.addEventListener("click", toggle);
+bigplay.addEventListener("click", toggle);
+watch.addEventListener("click", () => { toggle(); stage.scrollIntoView({ block: "nearest", behavior: "smooth" }); });
+$("#back").addEventListener("click", () => nudge(-10));
+$("#fwd").addEventListener("click", () => nudge(10));
+
+video.addEventListener("play", () => {
+  stage.classList.add("playing");
+  playToggle.innerHTML = ICON.pause;
+  playToggle.setAttribute("aria-label", "Pause");
+  watch.textContent = "Pause";
+  hideChromeSoon();
 });
+video.addEventListener("pause", () => {
+  stage.classList.remove("playing", "idle");
+  playToggle.innerHTML = ICON.play;
+  playToggle.setAttribute("aria-label", "Play");
+  watch.textContent = "Play";
+  clearTimeout(idleTimer);
+});
+video.addEventListener("waiting", () => stage.classList.add("waiting"));
+video.addEventListener("playing", () => stage.classList.remove("waiting"));
+video.addEventListener("canplay", () => stage.classList.remove("waiting"));
+
+video.addEventListener("loadedmetadata", () => { dur.textContent = fmt(video.duration); });
+
+let scrubbing = false;
+video.addEventListener("timeupdate", () => {
+  cur.textContent = fmt(video.currentTime);
+  if (scrubbing || !video.duration) return;
+  const p = video.currentTime / video.duration;
+  seek.value = Math.round(p * 1000);
+  stage.style.setProperty("--p", p);
+});
+video.addEventListener("progress", () => {
+  if (!video.duration || !video.buffered.length) return;
+  stage.style.setProperty("--b", video.buffered.end(video.buffered.length - 1) / video.duration);
+});
+
+seek.addEventListener("input", () => {
+  scrubbing = true;
+  const p = seek.value / 1000;
+  stage.style.setProperty("--p", p);
+  if (video.duration) cur.textContent = fmt(p * video.duration);
+});
+seek.addEventListener("change", () => {
+  if (video.duration) video.currentTime = (seek.value / 1000) * video.duration;
+  scrubbing = false;
+});
+
+volume.addEventListener("input", () => {
+  video.volume = Number(volume.value);
+  video.muted = video.volume === 0;
+});
+muteToggle.addEventListener("click", () => { video.muted = !video.muted; });
+video.addEventListener("volumechange", () => {
+  const v = video.muted ? 0 : video.volume;
+  volume.value = v;
+  volume.style.setProperty("--v", v);
+  muteToggle.innerHTML = v ? ICON.sound : ICON.muted;
+  muteToggle.setAttribute("aria-label", v ? "Mute" : "Unmute");
+});
+
+const RATES = [1, 1.25, 1.5, 2, 0.5];
+rate.addEventListener("click", () => {
+  const next = RATES[(RATES.indexOf(video.playbackRate) + 1) % RATES.length];
+  video.playbackRate = next;
+  rate.textContent = next + "×";
+});
+
+pip.addEventListener("click", () => {
+  document.pictureInPictureElement
+    ? document.exitPictureInPicture()
+    : video.requestPictureInPicture().catch(() => {});
+});
+
+const goFull = () => {
+  document.fullscreenElement ? document.exitFullscreen() : stage.requestFullscreen().catch(() => {});
+};
+full.addEventListener("click", goFull);
+stage.addEventListener("dblclick", (e) => { if (e.target === video || e.target === bigplay) goFull(); });
+
+video.addEventListener("error", () => {
+  if (!video.currentSrc) return;
+  stage.classList.remove("waiting");
+  stage.classList.add("errored");
+  faultMsg.textContent = "This file won't stream here — the codec isn't supported, or the share link has expired.";
+});
+
+/* chrome auto-hide */
+let idleTimer;
+function hideChromeSoon() {
+  clearTimeout(idleTimer);
+  stage.classList.remove("idle");
+  if (!video.paused) idleTimer = setTimeout(() => stage.classList.add("idle"), 2500);
+}
+stage.addEventListener("pointermove", hideChromeSoon);
+stage.addEventListener("pointerleave", () => { if (!video.paused) stage.classList.add("idle"); });
+
+/* keyboard — only when a video is loaded and focus isn't in a field */
+document.addEventListener("keydown", (e) => {
+  if (!video.currentSrc || e.metaKey || e.ctrlKey || e.altKey) return;
+  const t = e.target;
+  if (t.tagName === "INPUT" || t.tagName === "TEXTAREA") return;
+
+  const keys = {
+    " ": toggle, k: toggle,
+    ArrowLeft: () => nudge(-5), ArrowRight: () => nudge(5),
+    j: () => nudge(-10), l: () => nudge(10),
+    ArrowUp: () => { video.volume = Math.min(1, video.volume + 0.1); video.muted = false; },
+    ArrowDown: () => { video.volume = Math.max(0, video.volume - 0.1); },
+    m: () => { video.muted = !video.muted; },
+    f: goFull,
+  };
+  const act = keys[e.key] || keys[e.key.toLowerCase()];
+  if (!act) return;
+  e.preventDefault();
+  act();
+  hideChromeSoon();
+});
+
+/* self-check: #selftest */
+if (location.hash === "#selftest") {
+  console.assert(fmt(0) === "0:00", "fmt(0)");
+  console.assert(fmt(65) === "1:05", "fmt(65)");
+  console.assert(fmt(3725) === "1:02:05", "fmt(3725)");
+  console.assert(fmt(NaN) === "0:00", "fmt(NaN)");
+  console.log("selftest done");
+}
 </script>
 </body>
 </html>
