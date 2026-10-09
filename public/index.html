@@ -12,16 +12,16 @@
     --night: #0D0B14;
     --slab: #17131F;
     --edge: #2C2539;
+    --hair: #1C1726;
     --paper: #EDE7DE;
     --dim: #8C8399;
     --beam: #E8B04B;
     --bad: #E4757F;
-    --gut: clamp(1.25rem, 5vw, 4rem);
-    --fs-prompt: clamp(1.6rem, 6vw, 3.4rem);
+    --gut: clamp(1.25rem, 5vw, 5rem);
+    --wrap: 1280px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   html { -webkit-text-size-adjust: 100%; }
 
   body {
@@ -31,82 +31,90 @@
     background: var(--night);
     color: var(--paper);
     font-family: Archivo, ui-sans-serif, system-ui, sans-serif;
-    font-size: 1rem;
     font-variation-settings: 'wdth' 96, 'wght' 400;
     line-height: 1.5;
   }
 
   :focus-visible { outline: 2px solid var(--beam); outline-offset: 3px; }
+  [hidden] { display: none !important; }
 
-  .sr-only {
-    position: absolute; width: 1px; height: 1px;
-    clip-path: inset(50%); overflow: hidden; white-space: nowrap;
-  }
-
-  /* ---- frame ---- */
-  .bar {
-    display: flex; align-items: baseline; justify-content: space-between;
-    gap: 1rem; padding: 1.25rem var(--gut);
+  /* ---- header ---- */
+  .bar { padding: 0 var(--gut); border-bottom: 1px solid var(--hair); }
+  .bar-in {
+    max-width: var(--wrap); margin: 0 auto;
+    min-height: 64px;
+    display: flex; align-items: center; gap: clamp(1rem, 3vw, 2rem);
   }
   .mark {
+    flex: none;
     font-size: .9375rem;
     font-variation-settings: 'wdth' 120, 'wght' 700;
     letter-spacing: .01em;
   }
-  .bar .port { color: var(--dim); font-size: .8125rem; }
+  .port { flex: none; margin-left: auto; color: var(--dim); font-size: .8125rem; }
 
   main {
-    flex: 1;
-    padding: clamp(1.5rem, 12vh, 7rem) var(--gut) 3rem;
-    transition: padding-top .4s cubic-bezier(.2,.8,.2,1);
-  }
-  body.loaded main { padding-top: 1rem; }
-
-  .foot {
-    padding: 1.5rem var(--gut) 2rem;
-    color: var(--dim); font-size: .8125rem;
+    flex: 1; width: 100%;
+    max-width: var(--wrap); margin: 0 auto;
+    padding: 1.5rem var(--gut) 2.5rem;
+    display: flex; flex-direction: column; gap: 1.75rem;
   }
 
-  /* ---- intake ---- */
-  .intake { max-width: 1240px; margin: 0 auto; }
-
-  .lede {
-    max-width: 44ch;
-    margin-bottom: 1.75rem;
-    color: var(--dim);
-    font-size: 1.0625rem;
+  /* ---- stage: waiting frame, then player ---- */
+  .stage {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    max-height: 62svh;
+    min-height: 260px;
+    background: #000;
+    border-radius: 3px;
+    overflow: hidden;
+    isolation: isolate;
   }
-  body.loaded .lede { display: none; }
+  .stage video { width: 100%; height: 100%; display: block; object-fit: contain; background: #000; }
+  .stage.idle { cursor: none; }
 
+  .wait {
+    position: absolute; inset: 0; z-index: 6;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 1.25rem; padding: 1.5rem;
+    background: var(--slab);
+    border: 1px solid var(--edge); border-radius: 3px;
+  }
+  body.loaded .wait { display: none; }
+
+  .corner {
+    position: absolute; width: 26px; height: 26px;
+    border: 0 solid var(--beam); opacity: .45;
+  }
+  .corner.tl { top: 20px; left: 20px; border-top-width: 2px; border-left-width: 2px; }
+  .corner.tr { top: 20px; right: 20px; border-top-width: 2px; border-right-width: 2px; }
+  .corner.bl { bottom: 20px; left: 20px; border-bottom-width: 2px; border-left-width: 2px; }
+  .corner.br { bottom: 20px; right: 20px; border-bottom-width: 2px; border-right-width: 2px; }
+
+  .wait label { font-size: 1rem; color: var(--dim); }
+  .hint { font-size: .8125rem; color: var(--dim); text-align: center; }
+
+  /* ---- composer: inside the frame, then in the header ---- */
   .composer {
-    display: flex; align-items: flex-end; gap: 1rem;
-    border-bottom: 1px solid var(--edge);
-    padding-bottom: .4rem;
-    transition: border-color .2s, box-shadow .2s;
+    width: min(560px, 100%);
+    display: flex; align-items: flex-end; gap: .75rem;
+    border-bottom: 1px solid var(--beam);
+    padding-bottom: .5rem;
   }
-  .composer:focus-within {
-    border-color: var(--beam);
-    box-shadow: 0 1px 0 var(--beam);
-  }
-
   .prompt {
     flex: 1; min-width: 0;
     background: none; border: 0; outline: none;
     color: var(--paper);
-    font-family: inherit;
-    font-size: var(--fs-prompt);
+    font-family: inherit; font-size: clamp(1.25rem, 2.2vw, 1.75rem);
     font-variation-settings: 'wdth' 112, 'wght' 600;
     letter-spacing: -.02em;
-    line-height: 1.15;
-    transition: font-size .35s cubic-bezier(.2,.8,.2,1);
+    padding: 0 0 .375rem;
   }
-  .prompt::placeholder { color: #453D57; }
-  body.loaded { --fs-prompt: 1.0625rem; }
-
+  .prompt::placeholder { color: #6B6280; }
   .go {
-    flex: none;
-    margin-bottom: .3rem;
-    padding: .55rem 1rem;
+    flex: none; height: 44px; padding: 0 1.375rem;
     background: var(--beam); color: #1A1206;
     border: 0; border-radius: 2px;
     font-family: inherit; font-size: .875rem;
@@ -117,73 +125,25 @@
   .go:hover:not(:disabled) { background: #F3C168; }
   .go:disabled { background: var(--edge); color: var(--dim); cursor: progress; }
 
-  .note {
-    min-height: 1.5rem;
-    margin-top: .75rem;
-    font-size: .875rem;
-    color: var(--dim);
+  .bar-in .composer {
+    width: auto; flex: 1;
+    border-bottom-color: var(--edge);
+    padding-bottom: 0;
   }
+  .bar-in .composer:focus-within { border-bottom-color: var(--beam); }
+  .bar-in .prompt {
+    font-size: .875rem;
+    font-variation-settings: 'wdth' 100, 'wght' 400;
+    letter-spacing: 0; color: var(--dim);
+    padding: .5rem 0;
+  }
+  .bar-in .go { display: none; }
+
+  .note { min-height: 1.25rem; margin-top: -.75rem; font-size: .875rem; color: var(--dim); }
+  .note:empty { display: none; }
   .note.bad { color: var(--bad); }
 
-  /* ---- result ---- */
-  [hidden] { display: none !important; }
-
-  .shell {
-    max-width: 1240px; margin: 2.5rem auto 0;
-    display: grid; gap: clamp(1.5rem, 3vw, 2.5rem);
-    grid-template-columns: minmax(0, 1fr) 300px;
-    align-items: start;
-    animation: rise .45s cubic-bezier(.2,.8,.2,1) both;
-  }
-  @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
-
-  .rail h2 {
-    font-size: 1.3125rem;
-    font-variation-settings: 'wdth' 92, 'wght' 620;
-    line-height: 1.25;
-    overflow-wrap: anywhere;
-    margin-bottom: 1.25rem;
-  }
-  .facts {
-    display: grid; grid-template-columns: auto 1fr;
-    gap: .5rem 1.5rem;
-    font-size: .875rem;
-    padding-bottom: 1.25rem;
-    border-bottom: 1px solid var(--edge);
-  }
-  .facts dt { color: var(--dim); }
-  .facts dd { overflow-wrap: anywhere; }
-
-  .acts { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.25rem 0 1rem; }
-  .acts > * {
-    flex: 1 1 auto;
-    padding: .65rem 1rem;
-    border-radius: 2px;
-    font-family: inherit; font-size: .875rem;
-    font-variation-settings: 'wdth' 100, 'wght' 620;
-    text-align: center; text-decoration: none;
-    cursor: pointer;
-  }
-  .primary { background: var(--beam); color: #1A1206; border: 0; }
-  .primary:hover { background: #F3C168; }
-  .ghost { background: none; color: var(--paper); border: 1px solid var(--edge); }
-  .ghost:hover { border-color: var(--dim); }
-
-  .src { color: var(--dim); font-size: .8125rem; text-decoration: none; border-bottom: 1px solid var(--edge); }
-  .src:hover { color: var(--paper); }
-
-  /* ---- stage / player ---- */
-  .stage {
-    position: relative;
-    aspect-ratio: 16 / 9;
-    background: #000;
-    border-radius: 3px;
-    overflow: hidden;
-    isolation: isolate;
-  }
-  .stage video { width: 100%; height: 100%; display: block; object-fit: contain; background: #000; }
-  .stage.idle { cursor: none; }
-
+  /* ---- player overlays ---- */
   .blank {
     position: absolute; inset: 0;
     display: none;
@@ -193,7 +153,7 @@
     color: var(--dim); font-size: .9375rem;
   }
   .stage.no-preview { aspect-ratio: auto; min-height: 200px; }
-  .stage.no-preview .blank { display: flex; position: static; height: 100%; min-height: 200px; }
+  .stage.no-preview .blank { display: flex; position: static; min-height: 200px; }
   .stage.no-preview video, .stage.no-preview .chrome, .stage.no-preview .bigplay { display: none; }
 
   .bigplay {
@@ -216,10 +176,7 @@
   .stage.playing .bigplay { pointer-events: none; }
   .stage.playing .bigplay span { opacity: 0; transform: scale(1.4); }
 
-  .spin {
-    position: absolute; inset: 0; z-index: 3;
-    display: none; place-items: center;
-  }
+  .spin { position: absolute; inset: 0; z-index: 3; display: none; place-items: center; }
   .stage.waiting .spin { display: grid; }
   .stage.waiting .bigplay span { opacity: 0; }
   .spin i {
@@ -244,6 +201,7 @@
   .fault p { max-width: 42ch; color: var(--paper); }
   .fault a { color: var(--beam); }
 
+  /* ---- player chrome ---- */
   .chrome {
     position: absolute; inset: auto 0 0 0; z-index: 5;
     padding: 2.5rem .75rem .625rem;
@@ -255,9 +213,7 @@
   .stage:focus-within .chrome { opacity: 1; pointer-events: auto; }
 
   .track { position: relative; height: 18px; display: flex; align-items: center; }
-  .track::before,
-  .track .buf,
-  .track .played {
+  .track::before, .track .buf, .track .played {
     position: absolute; left: 0; height: 3px; border-radius: 2px;
     transition: height .15s;
   }
@@ -284,10 +240,7 @@
   .track:hover .seek::-webkit-slider-thumb,
   .seek:focus-visible::-webkit-slider-thumb { transform: scale(1); }
   .seek::-moz-range-track { height: 18px; background: none; }
-  .seek::-moz-range-thumb {
-    width: 13px; height: 13px; border: 0; border-radius: 50%;
-    background: var(--beam);
-  }
+  .seek::-moz-range-thumb { width: 13px; height: 13px; border: 0; border-radius: 50%; background: var(--beam); }
 
   .controls {
     display: flex; align-items: center; gap: .25rem;
@@ -320,8 +273,7 @@
 
   .vol { display: flex; align-items: center; }
   .vol input {
-    width: 0; opacity: 0;
-    height: 3px; margin: 0 .25rem 0 0;
+    width: 0; opacity: 0; height: 3px; margin: 0 .25rem 0 0;
     -webkit-appearance: none; appearance: none;
     border-radius: 2px;
     background: linear-gradient(to right, var(--paper) 0 calc(var(--v, 1) * 100%), rgba(237,231,222,.25) 0);
@@ -335,14 +287,77 @@
   }
   .vol input::-moz-range-thumb { width: 11px; height: 11px; border: 0; border-radius: 50%; background: var(--paper); }
 
-  @media (max-width: 900px) {
-    .shell { grid-template-columns: minmax(0, 1fr); margin-top: 1.5rem; }
-    .vol input { width: 56px; opacity: 1; }
+  /* ---- resolved file bar ---- */
+  .info { display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; }
+  .info-main { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: .5rem; }
+  .info h2 {
+    font-size: 1.125rem;
+    font-variation-settings: 'wdth' 92, 'wght' 620;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+  .meta { display: flex; align-items: center; flex-wrap: wrap; gap: .875rem; font-size: .8125rem; color: var(--dim); }
+  .meta i { width: 1px; height: 12px; background: var(--edge); }
+  .meta a { color: var(--dim); }
+  .meta a:hover { color: var(--paper); }
+
+  .acts { flex: none; display: flex; gap: .625rem; }
+  .acts > * {
+    height: 44px; padding: 0 1.625rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 2px;
+    font-family: inherit; font-size: .875rem;
+    font-variation-settings: 'wdth' 100, 'wght' 620;
+    text-decoration: none; cursor: pointer;
+  }
+  .primary { background: var(--beam); color: #1A1206; border: 0; }
+  .primary:hover { background: #F3C168; }
+  .ghost { background: none; color: var(--paper); border: 1px solid var(--edge); }
+  .ghost:hover { border-color: var(--dim); }
+
+  /* ---- recent ---- */
+  .recent { display: flex; flex-direction: column; }
+  .recent-head { padding-bottom: .5rem; border-bottom: 1px solid var(--hair); font-size: .8125rem; color: var(--dim); }
+  .recent-empty { padding-top: .75rem; font-size: .875rem; color: var(--dim); }
+
+  .row {
+    width: 100%;
+    min-height: 58px; padding: .5rem 0;
+    display: flex; align-items: center; gap: 1.25rem;
+    background: none; border: 0; border-bottom: 1px solid var(--hair);
+    color: var(--paper); text-align: left;
+    font-family: inherit; font-size: .9375rem;
+    cursor: pointer;
+  }
+  .row:hover .row-name { color: var(--beam); }
+  .row-thumb {
+    flex: none; width: 64px; height: 36px;
+    display: grid; place-items: center;
+    background: var(--slab); border: 1px solid var(--edge); border-radius: 2px;
+  }
+  .row-thumb svg { width: 14px; height: 14px; fill: var(--dim); }
+  .row-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row-size { flex: none; width: 90px; text-align: right; font-size: .8125rem; color: var(--dim); }
+  .row-when { flex: none; width: 110px; text-align: right; font-size: .8125rem; color: var(--dim); }
+
+  @media (max-width: 720px) {
+    body:not(.loaded) .stage { aspect-ratio: auto; height: 56svh; min-height: 380px; max-height: none; }
+    .row-when { display: none; }
+    .row-size { width: auto; }
+    .info { gap: 1.25rem; }
+    .acts { width: 100%; }
+    .acts > * { flex: 1; }
   }
 
   @media (max-width: 520px) {
     .ctl.rate, #pip { display: none; }
     .chrome { padding: 2rem .375rem .5rem; }
+    .vol input { width: 56px; opacity: 1; }
+    .corner { width: 20px; height: 20px; }
+    .corner.tl, .corner.tr { top: 14px; }
+    .corner.bl, .corner.br { bottom: 14px; }
+    .corner.tl, .corner.bl { left: 14px; }
+    .corner.tr, .corner.br { right: 14px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -352,109 +367,124 @@
 </head>
 <body>
   <header class="bar">
-    <span class="mark">TeraBox</span>
-    <span class="port">port 5000</span>
+    <div class="bar-in" id="barIn">
+      <span class="mark">TeraBox</span>
+      <span class="port">port 5000</span>
+    </div>
   </header>
 
   <main>
-    <section class="intake">
-      <p class="lede">Paste a share link. Watch it here, or save the file.</p>
+    <div class="stage" id="stage">
+      <video id="video" playsinline preload="metadata"></video>
 
-      <form class="composer" id="form" novalidate>
-        <label class="sr-only" for="link">TeraBox share link</label>
-        <input class="prompt" id="link" type="url" inputmode="url" spellcheck="false"
-               autocomplete="off" placeholder="terabox.com/s/…" autofocus />
-        <button class="go" id="go" type="submit">Get file</button>
-      </form>
+      <div class="wait">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
 
-      <p class="note" id="note" role="status" aria-live="polite"></p>
-    </section>
+        <label for="link">Paste a TeraBox share link</label>
 
-    <section class="shell" id="shell" hidden>
-      <div class="stage" id="stage">
-        <video id="video" playsinline preload="metadata"></video>
+        <form class="composer" id="form" novalidate>
+          <input class="prompt" id="link" type="url" inputmode="url" spellcheck="false"
+                 autocomplete="off" placeholder="terabox.com/s/…" autofocus />
+          <button class="go" id="go" type="submit">Get file</button>
+        </form>
 
-        <div class="blank"><p id="blankMsg">No preview for this file type.</p></div>
-
-        <button class="bigplay" id="bigplay" aria-label="Play">
-          <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>
-        </button>
-
-        <div class="spin" aria-hidden="true"><i></i></div>
-
-        <div class="fault">
-          <p id="faultMsg"></p>
-          <a href="#" id="faultSave" download>Save the file instead</a>
-        </div>
-
-        <div class="chrome">
-          <div class="track">
-            <div class="buf" id="buf"></div>
-            <div class="played" id="played"></div>
-            <input class="seek" id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek" />
-          </div>
-          <div class="controls">
-            <button class="ctl" id="playToggle" aria-label="Play"></button>
-            <button class="ctl" id="back" aria-label="Back 10 seconds">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18V6l-8.5 6zM20 18V6l-8.5 6z"/></svg>
-            </button>
-            <button class="ctl" id="fwd" aria-label="Forward 10 seconds">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 6v12l8.5-6zM4 6v12l8.5-6z"/></svg>
-            </button>
-            <span class="time"><span id="cur">0:00</span> / <span id="dur">0:00</span></span>
-            <span class="grow"></span>
-            <span class="vol">
-              <button class="ctl" id="muteToggle" aria-label="Mute"></button>
-              <input id="volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume" />
-            </span>
-            <button class="ctl rate" id="rate" aria-label="Playback speed">1×</button>
-            <button class="ctl" id="pip" aria-label="Picture in picture" hidden>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 11h-8v6h8v-6zm3-8H2a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h20a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-1 16H3V5h18v14z"/></svg>
-            </button>
-            <button class="ctl" id="full" aria-label="Full screen">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
-            </button>
-          </div>
-        </div>
+        <p class="hint">Plays MP4 and WebM here. Everything else downloads.</p>
       </div>
 
-      <aside class="rail">
-        <h2 id="fname"></h2>
-        <dl class="facts">
-          <dt>Size</dt><dd id="fsize"></dd>
-          <dt>Kind</dt><dd id="fkind"></dd>
-          <dt>Resolved in</dt><dd id="ftime"></dd>
-        </dl>
-        <div class="acts">
-          <button class="primary" id="watch" type="button">Play</button>
-          <a class="ghost" id="save" download>Save file</a>
+      <div class="blank"><p id="blankMsg">No preview for this file type.</p></div>
+
+      <button class="bigplay" id="bigplay" aria-label="Play">
+        <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>
+      </button>
+
+      <div class="spin" aria-hidden="true"><i></i></div>
+
+      <div class="fault">
+        <p id="faultMsg"></p>
+        <a href="#" id="faultSave" download>Save the file instead</a>
+      </div>
+
+      <div class="chrome">
+        <div class="track">
+          <div class="buf" id="buf"></div>
+          <div class="played" id="played"></div>
+          <input class="seek" id="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Seek" />
         </div>
-        <a class="src" id="direct" target="_blank" rel="noopener noreferrer">Open direct link</a>
-      </aside>
+        <div class="controls">
+          <button class="ctl" id="playToggle" aria-label="Play"></button>
+          <button class="ctl" id="back" aria-label="Back 10 seconds">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 18V6l-8.5 6zM20 18V6l-8.5 6z"/></svg>
+          </button>
+          <button class="ctl" id="fwd" aria-label="Forward 10 seconds">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 6v12l8.5-6zM4 6v12l8.5-6z"/></svg>
+          </button>
+          <span class="time"><span id="cur">0:00</span> / <span id="dur">0:00</span></span>
+          <span class="grow"></span>
+          <span class="vol">
+            <button class="ctl" id="muteToggle" aria-label="Mute"></button>
+            <input id="volume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume" />
+          </span>
+          <button class="ctl rate" id="rate" aria-label="Playback speed">1×</button>
+          <button class="ctl" id="pip" aria-label="Picture in picture" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 11h-8v6h8v-6zm3-8H2a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h20a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1zm-1 16H3V5h18v14z"/></svg>
+          </button>
+          <button class="ctl" id="full" aria-label="Full screen">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <p class="note" id="note" role="status" aria-live="polite"></p>
+
+    <div class="info" id="info" hidden>
+      <div class="info-main">
+        <h2 id="fname"></h2>
+        <div class="meta">
+          <span id="fsize"></span>
+          <i></i>
+          <span id="fkind"></span>
+          <i></i>
+          <a id="direct" target="_blank" rel="noopener noreferrer">Open direct link</a>
+        </div>
+      </div>
+      <div class="acts">
+        <button class="primary" id="watch" type="button">Play</button>
+        <a class="ghost" id="save" download>Save file</a>
+      </div>
+    </div>
+
+    <section class="recent">
+      <div class="recent-head">Recent</div>
+      <p class="recent-empty" id="recentEmpty">Files you open appear here.</p>
+      <div id="recentList"></div>
     </section>
   </main>
-
-  <footer class="foot">Running locally on port 5000.</footer>
 
 <script>
 const $ = (s) => document.querySelector(s);
 
-const form = $("#form"), link = $("#link"), go = $("#go"), note = $("#note");
-const shell = $("#shell"), stage = $("#stage"), video = $("#video");
-const seek = $("#seek"), buf = $("#buf"), played = $("#played");
+const barIn = $("#barIn"), form = $("#form"), link = $("#link"), go = $("#go"), note = $("#note");
+const stage = $("#stage"), video = $("#video"), info = $("#info");
+const seek = $("#seek");
 const cur = $("#cur"), dur = $("#dur");
 const playToggle = $("#playToggle"), bigplay = $("#bigplay"), watch = $("#watch");
 const muteToggle = $("#muteToggle"), volume = $("#volume"), rate = $("#rate");
 const pip = $("#pip"), full = $("#full");
 const save = $("#save"), direct = $("#direct"), faultSave = $("#faultSave");
-const fname = $("#fname"), fsize = $("#fsize"), fkind = $("#fkind"), ftime = $("#ftime");
+const fname = $("#fname"), fsize = $("#fsize"), fkind = $("#fkind");
 const faultMsg = $("#faultMsg"), blankMsg = $("#blankMsg");
+const recentList = $("#recentList"), recentEmpty = $("#recentEmpty");
 
 const ICON = {
   play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
   pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
   sound: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg>',
   muted: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9H4zm15.7-1.3-1.4-1.4L16 8.6l-2.3-2.3v2.8l.9.9 4.6 4.6 1.4-1.4-2.2-2.2 1.3-1.3z"/></svg>',
+  reel: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm2 3v2h2V7H7zm0 4v2h2v-2H7zm0 4v2h2v-2H7zm8-8v2h2V7h-2zm0 4v2h2v-2h-2zm0 4v2h2v-2h-2z"/></svg>',
 };
 
 const VIDEO_EXT = ["mp4", "webm", "ogg", "ogv", "mov", "m4v", "mkv", "avi", "ts", "flv", "wmv"];
@@ -467,23 +497,90 @@ const fmt = (s) => {
   return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(x).padStart(2, "0");
 };
 
+const ago = (then, now = Date.now()) => {
+  const mins = Math.floor((now - then) / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return mins + (mins === 1 ? " minute ago" : " minutes ago");
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + (hrs === 1 ? " hour ago" : " hours ago");
+  const days = Math.floor(hrs / 24);
+  if (days === 1) return "Yesterday";
+  if (days < 7) return days + " days ago";
+  return new Date(then).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
+
 function say(text, bad) {
   note.textContent = text;
   note.classList.toggle("bad", !!bad);
 }
 
+/* ---------- recent ---------- */
+
+const RECENT_KEY = "terabox.recent";
+
+function readRecent() {
+  try {
+    const list = JSON.parse(localStorage.getItem(RECENT_KEY));
+    return Array.isArray(list) ? list : [];
+  } catch { return []; }
+}
+
+function remember(entry) {
+  const list = readRecent().filter((r) => r.share !== entry.share);
+  list.unshift(entry);
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 8))); } catch {}
+  drawRecent();
+}
+
+function drawRecent() {
+  const list = readRecent();
+  recentList.replaceChildren();
+  recentEmpty.hidden = list.length > 0;
+
+  for (const r of list) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "row";
+
+    const thumb = document.createElement("span");
+    thumb.className = "row-thumb";
+    thumb.innerHTML = BROWSER_EXT.includes(r.ext) ? ICON.play : ICON.reel;
+
+    const name = document.createElement("span");
+    name.className = "row-name";
+    name.textContent = r.filename;
+
+    const size = document.createElement("span");
+    size.className = "row-size";
+    size.textContent = r.size || "";
+
+    const when = document.createElement("span");
+    when.className = "row-when";
+    when.textContent = ago(r.at);
+
+    row.append(thumb, name, size, when);
+    row.addEventListener("click", () => {
+      link.value = r.share;
+      form.requestSubmit();
+    });
+    recentList.append(row);
+  }
+}
+
+drawRecent();
+
 /* ---------- fetch ---------- */
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const url = link.value.trim();
-  if (!url) { say("Enter a TeraBox share link to continue.", true); link.focus(); return; }
+  const share = link.value.trim();
+  if (!share) { say("Enter a TeraBox share link to continue.", true); link.focus(); return; }
 
   go.disabled = true;
   say("Resolving…");
 
   try {
-    const res = await fetch("/api?url=" + encodeURIComponent(url));
+    const res = await fetch("/api?url=" + encodeURIComponent(share));
     const body = await res.json();
     const data = body.response ?? body;
     const fault = data.error || data.message;
@@ -491,7 +588,7 @@ form.addEventListener("submit", async (e) => {
     if (!res.ok || fault) { say(fault || res.statusText, true); return; }
     if (!data.download) { say("That link resolved, but carried no file.", true); return; }
 
-    present(data);
+    present(data, share);
     say("");
   } catch (err) {
     say("Could not reach the server: " + err.message, true);
@@ -500,17 +597,16 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-function present(data) {
+function present(data, share) {
   const filename = data.filename || "Untitled file";
   const ext = (filename.split(".").pop() || "").toLowerCase();
   const thumbs = data.thumbs && typeof data.thumbs === "object" ? data.thumbs : {};
   const streamUrl = "/stream?url=" + encodeURIComponent(data.download);
 
   fname.textContent = filename;
-  fsize.textContent = data.size || "Unknown";
+  fsize.textContent = data.size || "Unknown size";
   fkind.textContent = VIDEO_EXT.includes(ext) ? ext.toUpperCase() + " video"
     : ext ? ext.toUpperCase() + " file" : "File";
-  ftime.textContent = data.response_time || "—";
 
   save.href = streamUrl;
   save.download = filename;
@@ -532,8 +628,11 @@ function present(data) {
       : "No preview for " + (ext ? "." + ext : "this") + " files. Save it to open.";
   }
 
-  shell.hidden = false;
+  info.hidden = false;
+  if (form.parentElement !== barIn) barIn.insertBefore(form, barIn.lastElementChild);
   document.body.classList.add("loaded");
+
+  if (share) remember({ share, filename, size: data.size || "", ext, at: Date.now() });
 }
 
 function resetPlayer() {
@@ -580,7 +679,6 @@ video.addEventListener("pause", () => {
 video.addEventListener("waiting", () => stage.classList.add("waiting"));
 video.addEventListener("playing", () => stage.classList.remove("waiting"));
 video.addEventListener("canplay", () => stage.classList.remove("waiting"));
-
 video.addEventListener("loadedmetadata", () => { dur.textContent = fmt(video.duration); });
 
 let scrubbing = false;
@@ -646,7 +744,6 @@ video.addEventListener("error", () => {
   faultMsg.textContent = "This file won't stream here — the codec isn't supported, or the share link has expired.";
 });
 
-/* chrome auto-hide */
 let idleTimer;
 function hideChromeSoon() {
   clearTimeout(idleTimer);
@@ -656,11 +753,10 @@ function hideChromeSoon() {
 stage.addEventListener("pointermove", hideChromeSoon);
 stage.addEventListener("pointerleave", () => { if (!video.paused) stage.classList.add("idle"); });
 
-/* keyboard — only when a video is loaded and focus isn't in a field */
 document.addEventListener("keydown", (e) => {
   if (!video.currentSrc || e.metaKey || e.ctrlKey || e.altKey) return;
   const t = e.target;
-  if (t.tagName === "INPUT" || t.tagName === "TEXTAREA") return;
+  if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "BUTTON") return;
 
   const keys = {
     " ": toggle, k: toggle,
@@ -680,10 +776,16 @@ document.addEventListener("keydown", (e) => {
 
 /* self-check: #selftest */
 if (location.hash === "#selftest") {
+  const now = Date.UTC(2026, 0, 10, 12, 0, 0);
   console.assert(fmt(0) === "0:00", "fmt(0)");
   console.assert(fmt(65) === "1:05", "fmt(65)");
   console.assert(fmt(3725) === "1:02:05", "fmt(3725)");
   console.assert(fmt(NaN) === "0:00", "fmt(NaN)");
+  console.assert(ago(now - 30e3, now) === "Just now", "ago 30s");
+  console.assert(ago(now - 60e3, now) === "1 minute ago", "ago 1m");
+  console.assert(ago(now - 7.2e6, now) === "2 hours ago", "ago 2h");
+  console.assert(ago(now - 864e5, now) === "Yesterday", "ago 1d");
+  console.assert(ago(now - 3 * 864e5, now) === "3 days ago", "ago 3d");
   console.log("selftest done");
 }
 </script>

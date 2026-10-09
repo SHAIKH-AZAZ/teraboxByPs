@@ -211,3 +211,5 @@ Bun.serve({
     );
   },
 });
+
+console.log(`TeraBox ready on http://localhost:${port}`);
